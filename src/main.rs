@@ -1,5 +1,6 @@
 extern crate clap;
 use clap::{App, Arg, ArgMatches, SubCommand};
+use termion::color;
 
 mod todo_item;
 
@@ -44,12 +45,6 @@ fn main() {
 }
 
 fn new_item(args: &ArgMatches) {
-    // TODO: Remove this and add a verbosity flag
-    println!("Adding todo item: {}", args.value_of("item").unwrap());
-    if args.is_present("priority") {
-        println!("Todo has priority: {}", args.value_of("priority").unwrap());
-    }
-
     // If the new subcommand is run then the "item" argument is always
     // present. We do not need to worry about panicing
     let item = args.value_of("item").unwrap().to_string();
@@ -59,11 +54,28 @@ fn new_item(args: &ArgMatches) {
         Some(priority) => {
             // Parse the priority as a i8
             match priority.parse::<i8>() {
-                Ok(priority) => Some(priority),
-                Err(_) => Some(-1),
+                Ok(priority) => {
+                    if priority < 0 || priority > 9 {
+                        println!(
+                            "{}Error:{} priority needs to be an integer between (and including) 0 - 9. Input was outside of the bounds.",
+                            color::Fg(color::Red),
+                            color::Fg(color::Reset)
+                        );
+                        return;
+                    }
+                    priority
+                }
+                Err(_) => {
+                    println!(
+                        "{}Error:{} priority needs to be an integer between (and including) 0 - 9. Input was not an integer.",
+                        color::Fg(color::Red),
+                        color::Fg(color::Reset)
+                    );
+                    return;
+                }
             }
         }
-        None => Some(-1),
+        None => -1,
     };
 
     let todo_item = todo_item::TodoItem { priority, item };
