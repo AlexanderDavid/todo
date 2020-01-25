@@ -116,5 +116,5 @@ fn new_item(args: &ArgMatches) {
         due,
     };
     todo_item.save();
-    println!("{:#?}", todo_item);
+    debug!("{}", todo_item);
 }

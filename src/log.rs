@@ -22,16 +22,23 @@ macro_rules! info
     }
 }
 
-macro_rules! warn
-{
-    ($($x1:expr), +) => {
-        log!("[WARN] ", crate::log::termion::color::Fg(crate::log::termion::color::Yellow), $($x1),*);
-    }
-}
+//macro_rules! warn
+//{
+//($($x1:expr), +) => {
+//log!("[WARN] ", crate::log::termion::color::Fg(crate::log::termion::color::Yellow), $($x1),*);
+//}
+//}
 
 macro_rules! error
 {
     ($($x1:expr), +) => {
         log!("[ERROR] ", crate::log::termion::color::Fg(crate::log::termion::color::Green), $($x1),*);
+    }
+}
+
+macro_rules! debug
+{
+    ($($x1:expr), +) => {
+        log!("[DEBUG] ", crate::log::termion::color::Fg(crate::log::termion::color::Blue), $($x1),*);
     }
 }

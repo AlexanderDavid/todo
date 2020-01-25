@@ -1,12 +1,38 @@
 use chrono::{DateTime, Local};
+use std::fmt;
 use std::fs::File;
 use std::fs::OpenOptions;
 use std::io::{Error, ErrorKind, Write};
+
 #[derive(Debug)]
 pub struct TodoItem {
     pub priority: Option<i8>,
     pub item: String,
     pub due: Option<DateTime<Local>>,
+}
+
+impl fmt::Display for TodoItem {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // Instantiate a string to hold to todo information
+        let mut todo_text = String::new();
+
+        // Add the priority if there is one
+        if let Some(priority) = self.priority {
+            todo_text.push_str("[");
+            todo_text.push_str(&priority.to_string());
+            todo_text.push_str("] ");
+        }
+        // Add the due date if there is one
+        if let Some(due) = self.due {
+            todo_text.push_str("{");
+            todo_text.push_str(&due.to_string());
+            todo_text.push_str("} ");
+        }
+        // Add the todo text (always present)
+        todo_text.push_str(&self.item);
+
+        write!(f, "{}", todo_text)
+    }
 }
 
 impl TodoItem {
@@ -63,34 +89,16 @@ impl TodoItem {
     /// The format is as follows:
     ///         [PRIORITY] TEXT
     pub fn save(&self) {
-        // Instantiate a string to hold to todo information
-        let mut todo_text = String::new();
-
-        // Add the priority if there is one
-        if let Some(priority) = self.priority {
-            todo_text.push_str("[");
-            todo_text.push_str(&priority.to_string());
-            todo_text.push_str("] ");
-        }
-        // Add the due date if there is one
-        if let Some(due) = self.due {
-            todo_text.push_str("{");
-            todo_text.push_str(&due.to_string());
-            todo_text.push_str("} ");
-        }
-        // Add the todo text (always present)
-        todo_text.push_str(&self.item);
-
         // Get the data file
         match TodoItem::get_data_file(OpenOptions::new().append(true)) {
             // If there is a data file then write the todo item to it
             Ok(mut data_file) => {
-                if let Err(e) = writeln!(data_file, "{}", todo_text) {
-                    error!("Unable to write to todo file. {}", e);
+                if let Err(e) = writeln!(data_file, "{}", self) {
+                    error!("Unable to write to todo file. {}.", e);
                 }
             }
             // Log to the user if unable to write the file
-            Err(e) => error!("Unable to open todo file. {}.", e),
+            Err(e) => println!("Unable to open todo file. {}.", e),
         }
     }
 }
