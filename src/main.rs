@@ -33,7 +33,15 @@ fn main() {
                         .long("priority")
                         .required(false)
                         .takes_value(true)
-                        .help("Priority of the todo item"),
+                        .help("Priority of the todo item [OPTIONAL]"),
+                )
+                .arg(
+                    Arg::with_name("due")
+                        .short("d")
+                        .long("due")
+                        .required(false)
+                        .takes_value(true)
+                        .help("Due date for the todo item [OPTIONAL]"),
                 ),
         )
         .get_matches();
@@ -79,5 +87,6 @@ fn new_item(args: &ArgMatches) {
     };
 
     let todo_item = todo_item::TodoItem { priority, item };
+    todo_item.save();
     println!("{:#?}", todo_item);
 }
