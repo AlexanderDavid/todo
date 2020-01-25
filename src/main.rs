@@ -5,8 +5,8 @@ use chrono_english::{parse_date_string, Dialect};
 use clap::{App, Arg, ArgMatches, SubCommand};
 use termion::color;
 
-// TODO: Add macros for nice formatted warnings errors etc.
-
+#[macro_use]
+mod log;
 mod todo_item;
 
 const ME: &str = "Alex Day <alex@alexday.me>";
@@ -20,18 +20,22 @@ fn main() {
         .about("Simple command line todo manager")
         // Add a new subcommand. The new subcommand will be used when
         // the user wants to add a new todo list item. This item
-        // can be added with or without a priority. The use is as follows
+        // can be added with or without a priority and date. The use is as follows
         // todo new "Task to add"
         // todo new "Task with priority" -p 4
+        // todo new "Task with date" -d 3h
+        // todo new "Task with both" -p 3 -d Apr 4
         .subcommand(
             SubCommand::with_name("new")
                 .version("0.0.1")
                 .author(ME)
+                // Required argument that contains the todo item text
                 .arg(
                     Arg::with_name("item")
                         .help("Todo item to add")
                         .required(true),
                 )
+                // Optional argument for the priority
                 .arg(
                     Arg::with_name("priority")
                         .short("p")
@@ -40,6 +44,7 @@ fn main() {
                         .takes_value(true)
                         .help("Priority of the todo item [OPTIONAL]"),
                 )
+                // Optional argument for the due date
                 .arg(
                     Arg::with_name("due")
                         .short("d")

@@ -2,7 +2,6 @@ use chrono::{DateTime, Local};
 use std::fs::File;
 use std::fs::OpenOptions;
 use std::io::{Error, ErrorKind, Write};
-
 #[derive(Debug)]
 pub struct TodoItem {
     pub priority: Option<i8>,
@@ -48,7 +47,7 @@ impl TodoItem {
 
             // Alert the user that the file is being created
             // TODO: Might make sense to ask for confirmation
-            println!("Info: File doesn't exist. Creating it");
+            info!("File doesn't exist. Creating it.");
 
             // Try and create the file. We can just return the
             // create function because this returns a result
@@ -85,14 +84,13 @@ impl TodoItem {
         // Get the data file
         match TodoItem::get_data_file(OpenOptions::new().append(true)) {
             // If there is a data file then write the todo item to it
-            // TODO: Finalize format. Maybe need due dates?
             Ok(mut data_file) => {
                 if let Err(e) = writeln!(data_file, "{}", todo_text) {
-                    println!("Error: Unable to write to todo file. {}", e);
+                    error!("Unable to write to todo file. {}", e);
                 }
             }
             // Log to the user if unable to write the file
-            Err(e) => println!("Error: Unable to open todo file. {}", e),
+            Err(e) => error!("Unable to open todo file. {}.", e),
         }
     }
 }
