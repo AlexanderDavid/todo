@@ -1,6 +1,11 @@
+extern crate chrono_english;
 extern crate clap;
+use chrono::Local;
+use chrono_english::{parse_date_string, Dialect};
 use clap::{App, Arg, ArgMatches, SubCommand};
 use termion::color;
+
+// TODO: Add macros for nice formatted warnings errors etc.
 
 mod todo_item;
 
@@ -71,7 +76,7 @@ fn new_item(args: &ArgMatches) {
                         );
                         return;
                     }
-                    priority
+                    Some(priority)
                 }
                 Err(_) => {
                     println!(
@@ -83,10 +88,28 @@ fn new_item(args: &ArgMatches) {
                 }
             }
         }
-        None => -1,
+        None => None,
     };
 
-    let todo_item = todo_item::TodoItem { priority, item };
+    let due = match args.value_of("due") {
+        Some(due) => {
+            // Try and parse the date string
+            match parse_date_string(due, Local::now(), Dialect::Us) {
+                Ok(due) => Some(due),
+                Err(_) => {
+                    println!("Error parsing due date");
+                    return;
+                }
+            }
+        }
+        None => None,
+    };
+
+    let todo_item = todo_item::TodoItem {
+        priority,
+        item,
+        due,
+    };
     todo_item.save();
     println!("{:#?}", todo_item);
 }
