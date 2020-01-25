@@ -3,3 +3,5 @@ I have been searching for a nice way to store todos as plaintext on my machine. 
 
 # Ideas for Future
 - Categories
+- Examples
+- Web/Phone app (far future)
