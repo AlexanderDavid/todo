@@ -175,7 +175,7 @@ fn view_items() {
 
             // Pretty print the priority
             cells.push(Cell::new(&format!(
-                "{}{}{}{}{}",
+                "   {}{}{}{}{}",
                 style::Bold,
                 color::Fg(priority_colors[priority as usize]),
                 priority,
