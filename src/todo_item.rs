@@ -1,8 +1,12 @@
+use chrono::offset::TimeZone;
 use chrono::{DateTime, Local};
 use std::fmt;
 use std::fs::File;
 use std::fs::OpenOptions;
-use std::io::{Error, ErrorKind, Write};
+use std::io::{self, BufRead, Error, ErrorKind, Write};
+
+extern crate regex;
+use regex::Regex;
 
 #[derive(Debug)]
 pub struct TodoItem {
@@ -17,17 +21,19 @@ impl fmt::Display for TodoItem {
         let mut todo_text = String::new();
 
         // Add the priority if there is one
+        todo_text.push_str("[");
         if let Some(priority) = self.priority {
-            todo_text.push_str("[");
             todo_text.push_str(&priority.to_string());
-            todo_text.push_str("] ");
         }
+        todo_text.push_str("]");
+
         // Add the due date if there is one
+        todo_text.push_str("{");
         if let Some(due) = self.due {
-            todo_text.push_str("{");
             todo_text.push_str(&due.to_string());
-            todo_text.push_str("} ");
         }
+        todo_text.push_str("} ");
+
         // Add the todo text (always present)
         todo_text.push_str(&self.item);
 
@@ -36,6 +42,81 @@ impl fmt::Display for TodoItem {
 }
 
 impl TodoItem {
+    /// Gather all of the current todo items in the todo file
+    /// and return them as a list
+    pub fn get_items() -> Vec<TodoItem> {
+        let mut todo_items: Vec<TodoItem> = Vec::new();
+
+        let data_file = match TodoItem::get_data_file(OpenOptions::new().read(true)) {
+            Ok(file) => file,
+            Err(e) => {
+                error!("Couldn't open data file. {}", e);
+                return todo_items;
+            }
+        };
+
+        for line in io::BufReader::new(data_file).lines() {
+            match line {
+                Ok(line) => {
+                    if let Some(todo_item) = TodoItem::parse_todo_item(line) {
+                        todo_items.push(todo_item);
+                    }
+                }
+                Err(e) => {
+                    error!("Couldn't read line of todo file. {}", e);
+                    return todo_items;
+                }
+            }
+        }
+        todo_items
+    }
+
+    fn parse_todo_item(line: String) -> Option<TodoItem> {
+        // Create a lazy_static object for a regex that matches the
+        // todo list item and captures the different parts of it
+        // the regex can be explored here: https://regex101.com/r/bH46KS/2
+        lazy_static! {
+            static ref TODO_RE: Regex = Regex::new(
+                r"\[([0-9]?)\]\{(\d{4}\-\d{2}\-\d{2} \d{2}:\d{2}:\d{2}.\d{9} [+|-]\d{2}:\d{2})?\} ([\w|\s]*)",
+            ).unwrap();
+        }
+
+        // Stuff the todo object with the captured data
+        let mut todo_item = TodoItem {
+            item: "".to_string(),
+            priority: None,
+            due: None,
+        };
+        for cap in TODO_RE.captures_iter(&line) {
+            //TODO Silent errors are bad
+            let priority = match cap.get(1) {
+                Some(priority) => match priority.as_str().parse::<i8>() {
+                    Ok(priority) => Some(priority),
+                    Err(_) => None,
+                },
+                None => None,
+            };
+            let due = match cap.get(2) {
+                Some(due) => {
+                    match Local.datetime_from_str(due.as_str(), "%Y-%m-%d %H:%M:%S.%f %:z") {
+                        Ok(due) => Some(due),
+                        Err(_) => None,
+                    }
+                }
+                None => None,
+            };
+            let item = match cap.get(3) {
+                Some(item) => item.as_str(),
+                None => return None,
+            };
+
+            todo_item.item = item.to_string();
+            todo_item.priority = priority;
+            todo_item.due = due;
+        }
+        Some(todo_item)
+    }
+
     /// Gets the data file for the app on the computer. Uses
     /// the dirs crate to find the configuration dir. Opens
     /// the data file (creating it if needed) in an append mode
