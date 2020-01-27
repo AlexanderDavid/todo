@@ -10,6 +10,9 @@ keywords = ["productivity", "todo", "cli"]
 license = "MIT"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[[bin]]
+name = "todo"
+
 [dependencies]
 clap = "2.33.0"
 termion = "1.5.5"
