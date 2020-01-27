@@ -9,6 +9,7 @@ use chrono::Local;
 use chrono_english::{parse_date_string, Dialect};
 use clap::{App, Arg, ArgMatches, SubCommand};
 use prettytable::{Cell, Row, Table};
+use std::cmp::Ordering;
 use termion::{color, style};
 
 #[macro_use]
@@ -68,7 +69,21 @@ fn main() {
         // Add a view subcommand that displays all of the current todo items
         // The use is as follows:
         // todo view
-        .subcommand(SubCommand::with_name("view").version("0.1.1").author(ME))
+        .subcommand(
+            SubCommand::with_name("view")
+                .version("0.0.1")
+                .author(ME)
+                .arg(
+                    Arg::with_name("sort")
+                        .help("Sorting the todo items.")
+                        .long_help("Used to sort the todo items. 'd' and 'da' sort by due date ascending. 'dd' sorts by due date descending. 'p' and 'pa' sort by priority ascending. 'pd' sorts by due date descending.")
+                        .takes_value(true)
+                        .short("s")
+                        .long("sort")
+                        .possible_values(&["d", "da", "dd", "p", "pd", "pa"])
+                        .hide_possible_values(true) // they're explained in the help
+                ),
+        )
         // Get the information from the command line.
         .get_matches();
 
@@ -78,8 +93,8 @@ fn main() {
     }
 
     // View subcommand to view todo items
-    if let Some(_) = matches.subcommand_matches("view") {
-        view_items();
+    if let Some(matches) = matches.subcommand_matches("view") {
+        view_items(matches);
     }
 }
 
@@ -137,7 +152,7 @@ fn new_item(args: &ArgMatches) {
     debug!("{}", todo_item);
 }
 
-fn view_items() {
+fn view_items(args: &ArgMatches) {
     // Define a gradient for the priorities. This goes from
     // Red as priority 0 to green as priority 9
     let priority_colors = vec![
@@ -153,12 +168,87 @@ fn view_items() {
         color::Rgb(20, 135, 54),
     ];
 
+    // Gather the todo items
+    let mut todo_items = todo_item::TodoItem::get_items();
+
+    // If there are no todo items then print that and exit
+    if todo_items.len() == 0 {
+        println!("There are no todo items! Add one with `todo new [TODO ITEM]` and try aagain");
+        return;
+    }
+
+    // Check the sort parameter to see if the todo items need to be sorted. Both the due date
+    // and the priority are optional values and they are stored in Option<> types. When Rust
+    // sorts using the cmp value the sorting is done such that these types propogate to the front
+    // of the vector. This is not a logical behavior for this application as it would sort those
+    // items without a priority before those with. Because of this the sorting needs to be customized
+    // as to make the None appear at the end of the vector.
+    match args.value_of("sort") {
+        // Sort by due date ascending
+        Some("d") | Some("da") => {
+            todo_items.sort_unstable_by(|a, b| {
+                if let None = b.due {
+                    if let None = a.due {
+                        Ordering::Equal
+                    } else {
+                        Ordering::Less
+                    }
+                } else {
+                    a.due.cmp(&b.due)
+                }
+            });
+        }
+        // Sort by priority ascending
+        Some("p") | Some("pa") => {
+            todo_items.sort_unstable_by(|a, b| {
+                if let None = b.priority {
+                    if let None = a.priority {
+                        Ordering::Equal
+                    } else {
+                        Ordering::Less
+                    }
+                } else {
+                    a.priority.cmp(&b.priority)
+                }
+            });
+        }
+        // Sort by due date descending
+        Some("dd") => {
+            todo_items.sort_unstable_by(|a, b| {
+                if let None = b.due {
+                    if let None = a.due {
+                        Ordering::Equal
+                    } else {
+                        Ordering::Less
+                    }
+                } else {
+                    b.due.cmp(&a.due)
+                }
+            });
+        }
+        // Sort by priority descending
+        Some("pd") => {
+            todo_items.sort_unstable_by(|a, b| {
+                if let None = b.priority {
+                    if let None = a.priority {
+                        Ordering::Equal
+                    } else {
+                        Ordering::Less
+                    }
+                } else {
+                    b.priority.cmp(&a.priority)
+                }
+            });
+        }
+        _ => {}
+    };
+
     // Create a new pretty print table
     let mut table = Table::new();
     table.add_row(row!["PRIORITY", "DUE DATE", "TODO"]);
 
     // Iterate through all todo items in the file
-    for todo_item in todo_item::TodoItem::get_items() {
+    for todo_item in todo_items {
         // TODO: Special print those items with expired due dates
         // Create a new cell list for this todo item
         let mut cells: Vec<Cell> = vec![];
