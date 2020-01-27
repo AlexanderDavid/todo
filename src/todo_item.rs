@@ -8,14 +8,23 @@ use std::io::{self, BufRead, Error, ErrorKind, Write};
 extern crate regex;
 use regex::Regex;
 
-#[derive(Debug)]
+/// # Todo Item Object
+/// Contains all information about the todo list item.
+///
+/// ## Data Members
+///     - priority: numerical priority of the todo item
+///     - item: text that explains what to do
+///     - due: the due date of the todo item
 pub struct TodoItem {
     pub priority: Option<i8>,
     pub item: String,
     pub due: Option<DateTime<Local>>,
 }
 
+// Display trait implementation for the todo item
 impl fmt::Display for TodoItem {
+    /// # Display function
+    /// Displays the todo item nicely in the output location
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // Instantiate a string to hold to todo information
         let mut todo_text = String::new();
@@ -42,11 +51,13 @@ impl fmt::Display for TodoItem {
 }
 
 impl TodoItem {
-    /// Gather all of the current todo items in the todo file
-    /// and return them as a list
+    /// # Get All Todo Items
+    /// Gather all todo items from the default $CONFIG/todo/todo file
     pub fn get_items() -> Vec<TodoItem> {
+        // Instantiate a new vector to hold the todo items
         let mut todo_items: Vec<TodoItem> = Vec::new();
 
+        // Try and get the data file
         let data_file = match TodoItem::get_data_file(OpenOptions::new().read(true)) {
             Ok(file) => file,
             Err(e) => {
@@ -55,6 +66,7 @@ impl TodoItem {
             }
         };
 
+        // Parse each todo item into the todo items list.
         for line in io::BufReader::new(data_file).lines() {
             match line {
                 Ok(line) => {
@@ -68,6 +80,8 @@ impl TodoItem {
                 }
             }
         }
+
+        // Return the todo items
         todo_items
     }
 
@@ -117,10 +131,17 @@ impl TodoItem {
         Some(todo_item)
     }
 
+    /// # Get Data File
     /// Gets the data file for the app on the computer. Uses
-    /// the dirs crate to find the configuration dir. Opens
-    /// the data file (creating it if needed) in an append mode
-    /// using OpenOptions in a Result type.
+    /// the dirs crate to find the configuration dir. Opens the file
+    /// in the argument specified way and returns a io::Result containing
+    /// the file
+    ///
+    /// ## Args
+    ///     - open_options: OpenOptions that describes how to open the file
+    ///
+    /// ## Rets
+    ///     - Result<File> with the file or an error
     fn get_data_file(open_options: &OpenOptions) -> std::io::Result<File> {
         let mut data_file = match dirs::config_dir() {
             // If the config path exists then push through
@@ -166,9 +187,10 @@ impl TodoItem {
         open_options.open(data_file.as_path())
     }
 
+    /// # Save
     /// Save the todo to the config file located in $HOME/.config/todo/todo.
     /// The format is as follows:
-    ///         [PRIORITY] TEXT
+    ///         [PRIORITY] {DATE} TEXT
     pub fn save(&self) {
         // Get the data file
         match TodoItem::get_data_file(OpenOptions::new().append(true)) {

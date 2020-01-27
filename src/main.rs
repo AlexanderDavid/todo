@@ -98,25 +98,37 @@ fn main() {
     }
 }
 
-/// Priority Option Validator. Ensures that the Priority option is an i8 and is
-/// also within the bounds of 0 - 9
+/// # Priority Option Validator.
+/// Ensures that the Priority option is an i8 and is also within
+/// the bounds of 0 - 9. Meant to be used only with the clap Arg object
 fn is_priority(val: String) -> Result<(), String> {
+    // Try and parse the priority into an i8 to check its type
     let priority = match val.parse::<i8>() {
+        // If it parsed then just return it
         Ok(priority) => priority,
+        // If it didn't parse then return a reason for the error to the user
         Err(_) => return Err(String::from(
             "Priority needs to be an integer within the bounds 0 and 9. Input was not an integer.",
         )),
     };
 
+    // Check the bounds of the priority
     if priority > 9 || priority < 0 {
+        // If the priority is outside of good bounds then alert the user
         return Err(String::from(
             "Priority needs to be an integer within the bounds 0 and 9. Input was outside bounds.",
         ));
     }
 
+    // If this point is reached then the priority is valid
     Ok(())
 }
 
+/// # New Item Handler
+/// Handles adding a new item to the todo list data file.
+///
+/// # Args
+///     - args: Arguments from the Clap CLI application
 fn new_item(args: &ArgMatches) {
     // If the new subcommand is run then the "item" argument is always
     // present. We do not need to worry about panicing
@@ -129,9 +141,10 @@ fn new_item(args: &ArgMatches) {
         None => None,
     };
 
+    // Try and parse the due date if one exists
     let due = match args.value_of("due") {
         Some(due) => {
-            // Try and parse the date string
+            // Try and parse the date string using the chrono_english lib
             match parse_date_string(due, Local::now(), Dialect::Us) {
                 Ok(due) => Some(due),
                 Err(_) => {
@@ -143,15 +156,22 @@ fn new_item(args: &ArgMatches) {
         None => None,
     };
 
+    // Stuff a TodoItem with the information
     let todo_item = todo_item::TodoItem {
         priority,
         item,
         due,
     };
+
+    // Save the todo item to the data file
     todo_item.save();
-    debug!("{}", todo_item);
 }
 
+/// # View Todo Items Handler
+/// Show all of the todo items currently stored
+///
+/// ## Args
+///     args: Clap CLI arguments
 fn view_items(args: &ArgMatches) {
     // Define a gradient for the priorities. This goes from
     // Red as priority 0 to green as priority 9
@@ -300,5 +320,6 @@ fn view_items(args: &ArgMatches) {
         table.add_row(Row::new(row));
     }
 
+    // Print the table
     table.printstd();
 }
