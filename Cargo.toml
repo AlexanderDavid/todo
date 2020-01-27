@@ -1,5 +1,5 @@
 [package]
-name = "todo"
+name = "ToDone"
 version = "0.1.0"
 authors = ["Alex Day <alex@alexday.me>"]
 edition = "2018"
