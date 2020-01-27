@@ -1,6 +1,6 @@
 [package]
 name = "to_done"
-version = "0.1.0"
+version = "1.0.0"
 authors = ["Alex Day <alex@alexday.me>"]
 edition = "2018"
 description = "A simple, command line todo application"
