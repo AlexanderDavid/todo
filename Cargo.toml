@@ -3,7 +3,11 @@ name = "todo"
 version = "0.1.0"
 authors = ["Alex Day <alex@alexday.me>"]
 edition = "2018"
-
+description = "A simple, command line todo application"
+repository = "https://github.com/AlexanderDavid/todo"
+readme = "readme.md"
+keywords = ["productivity", "todo", "cli"]
+license = "MIT"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
