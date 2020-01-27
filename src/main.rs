@@ -177,12 +177,13 @@ fn view_items(args: &ArgMatches) {
         return;
     }
 
-    // Check the sort parameter to see if the todo items need to be sorted. Both the due date
-    // and the priority are optional values and they are stored in Option<> types. When Rust
-    // sorts using the cmp value the sorting is done such that these types propogate to the front
-    // of the vector. This is not a logical behavior for this application as it would sort those
-    // items without a priority before those with. Because of this the sorting needs to be customized
-    // as to make the None appear at the end of the vector.
+    // Check the sort parameter to see if the todo items need to be sorted. Both
+    // the due date and the priority are optional values and they are stored in
+    // Option<> types. When Rust sorts using the cmp value the sorting is done
+    // such that these types propogate to the front of the vector. This is not
+    // a logical behavior for this application as it would sort those items
+    // without a priority before those with. Because of this the sorting needs
+    // to be customized as to make the None appear at the end of the vector.
     match args.value_of("sort") {
         // Sort by due date ascending
         Some("d") | Some("da") => {
@@ -245,13 +246,12 @@ fn view_items(args: &ArgMatches) {
 
     // Create a new pretty print table
     let mut table = Table::new();
-    table.add_row(row!["PRIORITY", "DUE DATE", "TODO"]);
+    table.add_row(row![b => "PRIORITY", "DUE DATE", "TODO"]);
 
     // Iterate through all todo items in the file
     for todo_item in todo_items {
-        // TODO: Special print those items with expired due dates
         // Create a new cell list for this todo item
-        let mut cells: Vec<Cell> = vec![];
+        let mut row: Vec<Cell> = vec![];
 
         // Print the priority if one exists
         if let Some(priority) = todo_item.priority {
@@ -264,30 +264,40 @@ fn view_items(args: &ArgMatches) {
             }
 
             // Pretty print the priority
-            cells.push(Cell::new(&format!(
-                "   {}{}{}{}{}",
-                style::Bold,
-                color::Fg(priority_colors[priority as usize]),
-                priority,
-                color::Fg(color::Reset),
-                style::Reset,
-            )));
+            row.push(
+                Cell::new(&format!(
+                    "{}{}{}{}{}",
+                    style::Bold,
+                    color::Fg(priority_colors[priority as usize]),
+                    priority,
+                    color::Fg(color::Reset),
+                    style::Reset,
+                ))
+                .style_spec("c"),
+            );
         } else {
-            cells.push(Cell::new(""));
+            row.push(Cell::new(""));
         }
 
         // Pretty print the date if one exists
         if let Some(due) = todo_item.due {
-            cells.push(Cell::new(&format!("{}", due.format("%m/%d/%y %I:%M%p"))));
+            // Check if the due date is before the current date. If it is then set the
+            // styling to be a bright red color.
+            let style_string = if Local::now() > due { "Fr" } else { "" };
+
+            // Add the nicely formatted date to the row
+            row.push(
+                Cell::new(&format!("{}", due.format("%m/%d/%y %I:%M%p"))).style_spec(style_string),
+            );
         } else {
-            cells.push(Cell::new(""));
+            row.push(Cell::new(""));
         }
 
         // End the line with the actual todo item
-        cells.push(Cell::new(&todo_item.item));
+        row.push(Cell::new(&todo_item.item));
 
         // Add row to table
-        table.add_row(Row::new(cells));
+        table.add_row(Row::new(row));
     }
 
     table.printstd();
