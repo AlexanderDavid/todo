@@ -32,6 +32,7 @@ macro_rules! log {
 
 /// # Info Logging Macro
 /// Log info to the screen. The info is preceeded by a green [INFO]
+/// Can be used just like the println! macro.
 macro_rules! info
 {
     ($($x1:expr), +) => {
@@ -47,7 +48,8 @@ macro_rules! info
 //}
 
 /// # Error Logging Macro
-/// Log errors to the screen. The error is preceeded by a red [ERROR]
+/// Log errors to the screen. The error is preceeded by a red [ERROR].
+/// Can be used just like the println! macro.
 macro_rules! error
 {
     ($($x1:expr), +) => {
