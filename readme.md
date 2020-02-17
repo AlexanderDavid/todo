@@ -1,5 +1,5 @@
 # What is This?
-I have been searching for a nice way to store todos as plaintext on my machine.
+I have been searching for a nice way to store todos as plain-text on my machine.
 But then I realized it might be a nice side project. This is a simple command
 line todo list manager written in Rust.
 
@@ -19,7 +19,7 @@ trash out you would execute `todo new "Take out the trash" -p 0`.
 ### Due Dates
 Due dates are supported. These are parsed using the [Chrono
 English](https://crates.io/crates/chrono-englishs) crate. This means that you
-can include natural english in your todo items. The due date is passed in using
+can include natural English in your todo items. The due date is passed in using
 either the `-d` or `--due` flags. If you needed to take out the trash before
 tomorrow you could do `todo new "Take out trash" -d tomorrow`. You can also do
 more useful things like saying `todo new "Take out trash" -d 3hr` to specify the
@@ -38,6 +38,6 @@ respectively.
 - Categories
 - Filtering
 - Limiting printed todos
-- Due dates ellapsed are first
+- Due dates elapsed are first
 - Examples
 - Web/Phone app (far future)
